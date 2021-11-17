@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Главная</title>
+    <link rel="stylesheet" th:href="@{style/main.css}">
+</head>
+<body>
+<header>
+    <h1 class="roboto-font">Учёт товаров</h1>
+</header>
+<main>
+    <div class="album">
+        <div class="card">
+            <div class="card-photo">
+                <img th:src="@{img/products.jpg}" alt="товары">
+            </div>
+            <div class="card-description">
+                <h2 class="roboto-font">Товары</h2>
+                <p></p>
+            </div>
+            <a th:href="@{products}"></a>
+        </div>
+        <div class="card">
+            <div class="card-photo">
+                <img th:src="@{img/storage.jpg}" alt="склады">
+            </div>
+            <div class="card-description">
+                <h2 class="roboto-font">Склады</h2>
+                <p></p>
+            </div>
+            <a th:href="@{/storages}"></a>
+        </div>
+        <div class="card">
+            <div class="card-photo">
+                <img th:src="@{img/market.jpg}" alt="торг точка">
+            </div>
+            <div class="card-description">
+                <h2 class="roboto-font">Торговые точки</h2>
+                <p></p>
+            </div>
+            <a th:href="@{/markets}"></a>
+        </div>
+    </div>
+</main>
+
+
+</body>
+</html>

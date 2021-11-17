@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org" lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Товары</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-EVSTQN3/azprG1Anm3QDgpJLIm9Nao0Yz1ztcQTwFspd3yD65VohhpuuCOmLASjC" crossorigin="anonymous">
+    <link rel="stylesheet" th:href="@{style/products.css}">
+</head>
+<body>
+<div class="container">
+    <table class="table">
+        <thead>
+        <tr>
+            <th scope="col">#</th>
+            <th scope="col">Наименование товара</th>
+            <th scope="col">Ед. изменения</th>
+        </tr>
+        </thead>
+        <tbody>
+        <tr th:each="product : ${products}" th:attr="data-id=${product.id}">
+            <th scope="row" th:text="${product.id}">...</th>
+            <td th:text="${product.name}">...</td>
+            <td th:text="${product.unit}">...</td>
+            <td class="radio-td">
+                <label th:for="radio + ${product.id}">
+                    <input class="radio-input" type="radio" name="radio" th:id="radio + ${product.id}">
+                </label>
+            </td>
+        </tr>
+        </tbody>
+    </table>
+    <div class="btn-toolbar">
+        <!-- Button trigger modal -->
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal" id="addButton">
+            Добавить
+        </button>
+        <button type="button" class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addModal"
+                id="updateButton">
+            Изменить
+        </button>
+        <button type="button" class="btn btn-danger" id="deleteButton">Удалить</button>
+    </div>
+
+    <!-- Modal -->
+    <div class="modal fade" id="addModal" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
+         aria-labelledby="staticBackdropLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="staticBackdropLabel">Добавить товар</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form>
+                        <div class="form-row d-flex justify-content-between">
+                            <div class="form-group col-md-8">
+                                <label for="inputName">Наименование товара</label>
+                                <input type="text" class="form-control" id="inputName" maxlength="255" minlength="1">
+                            </div>
+                            <div class="form-group col-md-3">
+                                <label for="inputUnit">Ед. изменения</label>
+                                <select id="inputUnit" class="form-control">
+                                    <option selected>Выбрать...</option>
+                                    <option th:each="unit : ${units}" th:text="${unit.name}"
+                                            th:attr="data-id=${unit.id}">...
+                                    </option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="form-row mt-2">
+                            <div class="alert alert-danger d-none" role="alert" id="errorMessage">
+                                Ошибка!
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Отмена</button>
+                    <button type="button" class="btn btn-primary" id="submitAdd">Добавить</button>
+                    <button type="button" class="btn btn-primary" id="submitUpdate">Изменить</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
+        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
+        crossorigin="anonymous"></script>
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script th:src="@{script/main.js}"></script>
+<script>
+    const myModal = $('#addModal').get(0);
+    const inputName = $('#inputName');
+    const inputUnit = $('#inputUnit');
+    const errorMessage = $('#errorMessage');
+    const deleteButton = $('#deleteButton');
+    const updateButton = $('#updateButton');
+    const addButton = $('#addButton');
+    const submitUpdate = $('#submitUpdate');
+    const submitAdd = $('#submitAdd');
+
+    myModal.addEventListener('shown.bs.modal', function () {
+        inputName.get(0).focus();
+        errorMessage.addClass('d-none');
+    });
+
+    addButton.click(() => {
+        inputName.val('');
+        submitUpdate.addClass('d-none');
+        submitAdd.removeClass('d-none');
+    });
+
+    updateButton.click(() => {
+        submitAdd.addClass('d-none');
+        submitUpdate.removeClass('d-none');
+        const id = getSelectedRow();
+        if (id < 0) {
+            return;
+        }
+        $.ajax({
+            url: '/products/product?id=' + id,
+            contentType: 'application/json',
+            method: 'GET',
+            success: (data) => {
+                inputName.val(data.name);
+                $(`#inputUnit option[data-id=${data.unitId}]`).attr("selected", "selected");
+            }
+        });
+    });
+
+    deleteButton.click(() => {
+        const id = getSelectedRow();
+        console.log(id)
+        if (id === -1) {
+            return;
+        }
+        $.ajax({
+            url: "/products/delete?id=" + id,
+            contentType: 'application/json',
+            method: 'POST',
+            success: (data) => {
+                console.log(data);
+                location.reload();
+            }
+        });
+    });
+
+    function getSelectedRow() {
+        let id = -1;
+        $('tr').each((index, elem) => {
+            if (elem.classList.contains('checked')) {
+                id = elem.dataset.id;
+            }
+        });
+        return id;
+    }
+
+    submitAdd.click(e => {
+
+        if (!inputName.val().trim()) {
+            errorMessage.removeClass('d-none');
+            errorMessage.text('Заполните поле наименование');
+            return;
+        }
+
+        if (inputUnit.val() === 'Выбрать...') {
+            errorMessage.text('Выберите ед. измерения');
+            errorMessage.removeClass('d-none');
+            return;
+        }
+
+        $.ajax({
+            url: '/products/add',
+            contentType: 'application/json',
+            method: 'POST',
+            data: JSON.stringify({
+                name: inputName.val(),
+                unitId: $('#inputUnit option:selected').data('id')
+            }),
+            success: () => {
+                location.reload();
+            },
+            error: (data) => {
+                errorMessage.text(data.responseJSON.error);
+                errorMessage.removeClass('d-none');
+            }
+        });
+    });
+
+    submitUpdate.click(() => {
+        if (!inputName.val().trim()) {
+            errorMessage.removeClass('d-none');
+            errorMessage.text('Заполните поле наименование');
+            return;
+        }
+
+        if (inputUnit.val() === 'Выбрать...') {
+            errorMessage.text('Выберите ед. измерения');
+            errorMessage.removeClass('d-none');
+            return;
+        }
+        const id = getSelectedRow();
+        $.ajax({
+            url: '/products/update',
+            contentType: 'application/json',
+            method: 'POST',
+            data: JSON.stringify({
+                id: id,
+                name: inputName.val(),
+                unitId: $('#inputUnit option:selected').data('id')
+            }),
+            success: () => {
+                location.reload();
+            },
+            error: (data) => {
+                errorMessage.text(data.responseJSON.error);
+                errorMessage.removeClass('d-none');
+            }
+        });
+    });
+
+</script>
+</body>
+</html>
